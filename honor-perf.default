@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Configuration for honor-perf.service (/etc/default/honor-perf).
+# Restart the service after edits: sudo systemctl restart honor-perf.service
+
+# Auto-enable High Performance mode when on AC and battery >= threshold (20..100).
+# Set to 0 to disable automatic switching (manual Fn+P / CLI only).
+# Example: HONOR_PERF_AUTO_HIGH_THRESHOLD=75
+HONOR_PERF_AUTO_HIGH_THRESHOLD=0
+
+# Send desktop notifications via notify-send on mode changes (1=on, 0=off).
+HONOR_PERF_NOTIFY=1
+
+# Sync power-profiles-daemon (balanced <-> performance) when mode changes (1=on, 0=off).
+HONOR_PERF_SYNC_PPD=1
+
+# Numeric CPU EPP to apply in Smart/Balanced mode on AC (Honor 225H uses 64;
+# stock power-profiles-daemon sets 128 which caps 225H around ~25W under load).
+# Set empty to skip writing EPP on AC balanced.
+HONOR_PERF_AC_BALANCED_EPP=64
+
+# Interval in seconds for Intel DTT keep-alive (/sys/bus/platform/devices/INTC1042:00/imok).
+# Only written while thermald.service is active. Set 0 to disable.
+HONOR_PERF_IMOK_INTERVAL=4

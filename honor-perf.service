@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+[Unit]
+Description=HONOR MagicBook Pro 14 (FMB-P) performance mode daemon
+After=thermald.service sys-kernel-debug.mount systemd-logind.service
+
+[Service]
+EnvironmentFile=-/etc/default/honor-perf
+ExecStart=/usr/local/libexec/honor-perfd
+RuntimeDirectory=honor-perf
+Restart=on-failure
+RestartSec=3s
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=multi-user.target
