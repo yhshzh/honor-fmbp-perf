@@ -38,7 +38,7 @@ Pure Python 3 standard library daemon (`honor-perfd`) + unprivileged CLI (`honor
 - Stock `huawei_wmi` kernel module and mounted `/sys/kernel/debug` (`debugfs`)
 - `thermald` running with `--adaptive` (enabled automatically by Arch's default `thermald.service`; check your distro's unit file if using Fedora/Ubuntu)
 - Python 3 (standard library only)
-- Optional: `power-profiles-daemon` (`powerprofilesctl`), `libnotify` (`notify-send`)
+- Optional: `power-profiles-daemon` or `tuned-ppd` (synced via D-Bus `org.freedesktop.UPower.PowerProfiles`), `libnotify` (`notify-send`)
 
 ## Install & Uninstall
 

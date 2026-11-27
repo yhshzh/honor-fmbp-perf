@@ -164,6 +164,30 @@ class InterfaceTests(unittest.TestCase):
                 daemon.ping_imok()
                 fake_imok.write_text.assert_called_once_with('0\n')
 
+    def test_set_power_profile_dbus_and_fallback(self):
+        with patch.object(daemon.subprocess, 'run') as run:
+            daemon.set_power_profile('performance')
+            run.assert_called_once()
+            argv = run.call_args.args[0]
+            self.assertEqual(argv[:4], [
+                '/usr/bin/busctl', 'set-property',
+                'org.freedesktop.UPower.PowerProfiles',
+                '/org/freedesktop/UPower/PowerProfiles',
+            ])
+            self.assertEqual(argv[-3:], ['ActiveProfile', 's', 'performance'])
+
+        with patch.object(
+            daemon.subprocess,
+            'run',
+            side_effect=[FileNotFoundError('no busctl'), FileNotFoundError('no busctl'), None],
+        ) as run:
+            daemon.set_power_profile('balanced')
+            self.assertEqual(run.call_count, 3)
+            self.assertEqual(run.call_args.args[0], ['/usr/bin/powerprofilesctl', 'set', 'balanced'])
+
+        with patch.object(daemon.subprocess, 'run', side_effect=FileNotFoundError('missing')):
+            daemon.set_power_profile('balanced')
+
 
 class ControllerTests(unittest.TestCase):
     def setUp(self):
@@ -186,7 +210,7 @@ class ControllerTests(unittest.TestCase):
             daemon,
             snapshot=self.snapshot,
             wmi=self.stub,
-            optional=self.profile,
+            set_power_profile=self.profile,
             notify=self.notify,
             set_epp=self.epp,
             ping_imok=self.imok,
@@ -218,7 +242,7 @@ class ControllerTests(unittest.TestCase):
         self.update(event=1)
         self.stub.assert_called_once_with(0x010f04)
         self.imok.assert_called_once()
-        self.profile.assert_called_once_with(['/usr/bin/powerprofilesctl', 'set', 'performance'])
+        self.profile.assert_called_once_with('performance')
         self.notify.assert_called_once_with('Enabled High Performance (PL1 65W / PL2 77W)')
 
     def test_boot_already_high(self):

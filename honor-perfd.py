@@ -200,6 +200,42 @@ def optional(argv, **kwargs):
         logging.info('%s', exc)
 
 
+def set_power_profile(profile):
+    """Sync power-profiles-daemon or tuned-ppd over D-Bus, falling back to powerprofilesctl."""
+    candidates = (
+        [
+            '/usr/bin/busctl', 'set-property',
+            'org.freedesktop.UPower.PowerProfiles',
+            '/org/freedesktop/UPower/PowerProfiles',
+            'org.freedesktop.UPower.PowerProfiles',
+            'ActiveProfile', 's', profile,
+        ],
+        [
+            '/usr/bin/busctl', 'set-property',
+            'net.hadess.PowerProfiles',
+            '/net/hadess/PowerProfiles',
+            'net.hadess.PowerProfiles',
+            'ActiveProfile', 's', profile,
+        ],
+        ['/usr/bin/powerprofilesctl', 'set', profile],
+    )
+    last_exc = None
+    for argv in candidates:
+        try:
+            subprocess.run(
+                argv,
+                check=True,
+                timeout=2,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            return
+        except (OSError, subprocess.SubprocessError) as exc:
+            last_exc = exc
+    if last_exc is not None:
+        logging.info('power profile sync skipped: %s', last_exc)
+
+
 def notify(body):
     seats = active_uids()
     for bus in Path('/run/user').glob('[0-9]*/bus'):
@@ -310,7 +346,7 @@ class Controller:
         mode, ac, _, oem = state
         changed = self.mode != mode and confirmed(mode, ac, oem)
         if changed and self.config['sync_ppd']:
-            optional(['/usr/bin/powerprofilesctl', 'set', ('balanced', 'performance')[mode]])
+            set_power_profile(('balanced', 'performance')[mode])
         if changed or self.last_epp_key != (mode, ac):
             set_epp(mode, ac, self.config['ac_balanced_epp'])
             self.last_epp_key = (mode, ac)
